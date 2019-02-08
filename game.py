@@ -3,8 +3,9 @@ import os
 import random
 
 pygame.init()
+pygame.mixer.init()
 running = True
-image = pygame.image.load(os.path.join('data', 'background.png'))
+image = pygame.image.load(os.path.join('data', 'textures', 'background.png'))
 width = image.get_rect()[2]
 height = image.get_rect()[-1]
 screen = pygame.display.set_mode((width, height))
@@ -27,7 +28,7 @@ camera = 0
 class Ground(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.image.load(os.path.join('data', 'ground.png'))
+        self.image = pygame.image.load(os.path.join('data', 'textures', 'ground.png'))
         self.image = pygame.transform.scale(self.image, (480, 50))
         self.rect = self.image.get_rect()
         self.rect.x = 0
@@ -36,14 +37,14 @@ class Ground(pygame.sprite.Sprite):
 
 
 class Platform(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, x, y):
         super().__init__()
-        self.image = pygame.image.load(os.path.join('data', 'platform.png'))
+        self.image = pygame.image.load(os.path.join('data', 'textures', 'platform.png'))
         self.image = pygame.transform.scale(self.image, (100, 25))
         self.rect = self.image.get_rect()
-        self.rect.x = 90
-        self.rect.y = 500
-        print(self.rect)
+        self.rect.x = x
+        self.rect.y = y
+        # print(self.rect)
 
     def update(self):
         pass
@@ -52,9 +53,9 @@ class Platform(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image_1 = pygame.image.load(os.path.join('data', 'doodle.png'))
-        self.image_2 = pygame.image.load(os.path.join('data', 'doodle_pr.png'))
-        self.image = pygame.image.load(os.path.join('data', 'doodle.png'))
+        self.image_1 = pygame.image.load(os.path.join('data', 'heroes', 'doodle.png'))
+        self.image_2 = pygame.image.load(os.path.join('data', 'heroes', 'doodle_pr.png'))
+        self.image = pygame.image.load(os.path.join('data', 'heroes', 'doodle.png'))
         self.mask = pygame.mask.from_surface(self.image)
         self.image = pygame.transform.scale(self.image, (80, 80))
         self.image_1 = pygame.transform.scale(self.image, (80, 80))
@@ -67,6 +68,8 @@ class Player(pygame.sprite.Sprite):
         self.flag = False
         self.camera = 0
         self.k = 0
+        self.n = 0
+        self.flag_coll = False
 
     def check(self):
         if not (pygame.sprite.spritecollideany(self, all_sprites)):
@@ -78,7 +81,9 @@ class Player(pygame.sprite.Sprite):
             self.kill()
 
     def update(self):
-        self.camera = 0
+        if not self.flag_coll:
+            self.n = 0
+            self.camera = 0
         if self.rect.y > height - 200 and not self.flag:
             self.rect.y -= v / fps
         else:
@@ -88,14 +93,20 @@ class Player(pygame.sprite.Sprite):
                 self.flag = True
                 self.rect.y += v / fps
         if pygame.sprite.spritecollideany(self, all_sprites):
-            if pygame.sprite.spritecollideany(self, all_sprites) == platform \
+            if pygame.sprite.spritecollideany(self, all_sprites) in platforms \
                     and pygame.sprite.spritecollideany(self, all_sprites).rect.y < self.rect.y:
-                self.camera = 100
+                self.n = 600 - pygame.sprite.spritecollideany(self, all_sprites).rect.y
+                self.flag_coll = True
             self.image = self.image_2
             self.jump = 1
         else:
             self.jump = 0
             self.image = self.image_1
+        if self.flag_coll:
+            self.camera = 10
+            self.n -= 10
+        if self.n <= 0:
+            self.flag_coll = False
         if self.rect.y - self.camera <= 200:
             self.camera -= 10
         if self.direction and self.jump:
@@ -120,13 +131,22 @@ class Player(pygame.sprite.Sprite):
 
 player = Player()
 ground = Ground()
-platform = Platform()
+x_pos = 0
+y_pos = 500
 all_sprites = pygame.sprite.Group()
+for x in range(100):
+    platforms.append(Platform(x_pos, y_pos))
+    x_pos = random.randint(0, 300)
+    y_pos -= random.randint(100, 150)
+
+all_sprites.add(platforms)
 player_g = pygame.sprite.Group()
 all_sprites.add(ground)
-all_sprites.add(platform)
 player_g.add(player)
-image_3 = pygame.image.load(os.path.join('data', 'gameover.png'))
+image_3 = pygame.image.load(os.path.join('data', 'textures', 'gameover.png'))
+pygame.mixer.music.load("data/music/Windows_XP_Shutdown.mp3")
+pygame.mixer.music.set_volume(0.4)
+f = True
 
 while running:
     if player_g:
@@ -134,6 +154,9 @@ while running:
     else:
         screen.fill(black)
         screen.blit(image_3, (0, 190))
+        if f:
+            pygame.mixer.music.play(1)
+            f = False
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -146,8 +169,10 @@ while running:
         player.set_coords(10)
     all_sprites.update()
     player_g.update()
-    player_g.draw(screen)
     all_sprites.draw(screen)
+    player_g.draw(screen)
+    if not player_g:
+        screen.blit(image_3, (0, 190))
     clock.tick(fps)
     pygame.display.flip()
 pygame.quit()

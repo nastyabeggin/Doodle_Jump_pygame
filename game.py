@@ -53,7 +53,7 @@ class Platform(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image_1 = pygame.image.load(os.path.join('data', 'heroes', 'doodle.png'))
+        self.image_1 = pygame.image.load(os.path.join('data', 'heroes', 'doodle.png')) # загружаем изображения
         self.image_2 = pygame.image.load(os.path.join('data', 'heroes', 'doodle_pr.png'))
         self.image = pygame.image.load(os.path.join('data', 'heroes', 'doodle.png'))
         self.mask = pygame.mask.from_surface(self.image)
@@ -63,13 +63,13 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = width // 2 - 40
         self.rect.y = height - 100
-        self.direction = 0
-        self.jump = False
-        self.flag = False
-        self.camera = 0
-        self.k = 0
-        self.n = 0
-        self.flag_coll = False
+        self.direction = 0 # направление дудла (если 1, то зеркально отоброжаем картинку)
+        self.jump = False # в прыжке ли дудл
+        self.flag = False # флаг, отвечающий за положение дудла по оси y
+        self.camera = 0 # положение камеры
+        self.k = 0 # число, которое показывает, сколько дудл не соприкасался с платформами
+        self.n = 0 # переменная, отвечающая за плавное6 движение камеры
+        self.flag_coll = False # флаг, покзывающий соприкасается ли дудл с платформой 
 
     def check(self):
         if not (pygame.sprite.spritecollideany(self, all_sprites)):

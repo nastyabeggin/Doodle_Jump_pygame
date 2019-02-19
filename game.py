@@ -72,11 +72,7 @@ class Player(pygame.sprite.Sprite):
         self.flag_coll = False # флаг, покзывающий соприкасается ли дудл с платформой 
 
     def check(self):
-        if not (pygame.sprite.spritecollideany(self, all_sprites)):
-            self.k += 1
-        else:
-            self.k = 0
-        if not (pygame.sprite.spritecollideany(self, all_sprites)) and self.k > 50:
+        if not (pygame.sprite.spritecollideany(self, all_sprites)) and self.rect.y >= 540:
             screen.fill(red)
             self.kill()
 
@@ -134,7 +130,7 @@ ground = Ground()
 x_pos = 0
 y_pos = 500
 all_sprites = pygame.sprite.Group()
-for x in range(100):
+for x in range(300):
     platforms.append(Platform(x_pos, y_pos))
     x_pos = random.randint(0, 300)
     y_pos -= random.randint(100, 150)
